@@ -119,17 +119,32 @@ def aggregate_by_spatial_domains(
     if config.embedding_key not in adata.obsm:
         raise ValueError(f"Embedding key '{config.embedding_key}' not found in adata.obsm")
 
-    domains = adata.obs[config.domain_key].values
+    domains = adata.obs[config.domain_key].astype(str).values
     embeddings = adata.obsm[config.embedding_key]
     spatial = adata.obsm["spatial"][:, :2]
+
+    # Filter out cells with no domain assignment
+    valid_mask = (domains != "nan") & (domains != "None") & (domains != "")
+    obs_filtered = adata.obs.iloc[np.where(valid_mask)[0]] if not valid_mask.all() else adata.obs
+    if not valid_mask.all():
+        domains = domains[valid_mask]
+        embeddings = embeddings[valid_mask]
+        spatial = spatial[valid_mask]
+
     unique_domains = np.unique(domains)
 
-    has_cell_types = config.include_composition and config.cell_type_key in adata.obs.columns
+    has_cell_types = config.include_composition and config.cell_type_key in obs_filtered.columns
     if has_cell_types:
-        all_cell_types = sorted(adata.obs[config.cell_type_key].dropna().unique())
+        # Use global cell type list if available (ensures consistent vector length)
+        if hasattr(config, "_global_cell_types") and config._global_cell_types is not None:
+            all_cell_types = config._global_cell_types
+        else:
+            all_cell_types = sorted(obs_filtered[config.cell_type_key].dropna().unique())
         cell_type_to_idx = {ct: i for i, ct in enumerate(all_cell_types)}
     else:
         all_cell_types = None
+
+    cell_types_arr = obs_filtered[config.cell_type_key].values if has_cell_types else None
 
     mean_embeddings = []
     cell_counts = []
@@ -145,7 +160,7 @@ def aggregate_by_spatial_domains(
         centroids.append(np.mean(spatial[mask], axis=0))
 
         if has_cell_types:
-            cts = adata.obs.loc[mask, config.cell_type_key].values
+            cts = cell_types_arr[mask]
             comp = np.zeros(len(all_cell_types))
             for ct in cts:
                 if ct in cell_type_to_idx:
@@ -190,7 +205,10 @@ def aggregate_by_grid(
 
     has_cell_types = config.include_composition and config.cell_type_key in adata.obs.columns
     if has_cell_types:
-        all_cell_types = sorted(adata.obs[config.cell_type_key].dropna().unique())
+        if hasattr(config, "_global_cell_types") and config._global_cell_types is not None:
+            all_cell_types = config._global_cell_types
+        else:
+            all_cell_types = sorted(adata.obs[config.cell_type_key].dropna().unique())
         cell_type_to_idx = {ct: i for i, ct in enumerate(all_cell_types)}
     else:
         all_cell_types = None
@@ -260,6 +278,25 @@ def aggregate_all_samples(
 ) -> list[NicheRepresentation]:
     """Aggregate all samples to niche-level representations."""
     config = config or AggregationConfig()
+
+    # Collect global cell type list so all samples use the same composition vector length
+    if config.include_composition and config.cell_type_key:
+        all_ct = set()
+        for adata in samples.values():
+            if config.cell_type_key in adata.obs.columns:
+                all_ct.update(adata.obs[config.cell_type_key].dropna().unique())
+        config = AggregationConfig(
+            method=config.method,
+            grid_size_um=config.grid_size_um,
+            domain_key=config.domain_key,
+            embedding_key=config.embedding_key,
+            include_composition=config.include_composition,
+            cell_type_key=config.cell_type_key,
+        )
+        config._global_cell_types = sorted(all_ct)
+    else:
+        config._global_cell_types = None
+
     representations = []
 
     for sample_id, adata in samples.items():
