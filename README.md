@@ -104,6 +104,45 @@ crossfade/
     └── aggregation.py                   # Niche-level aggregation
 ```
 
+## Public datasets for pretraining
+
+Candidate datasets for pretraining a temporal transition model on EAE/MS data.
+
+### Spatial transcriptomics with temporal EAE sampling
+
+| Dataset | Technology | Model / Tissue | Timepoints | Accession |
+|---------|-----------|----------------|------------|-----------|
+| Kukanja et al., Cell 2024 | ISS (239 genes) + Xenium | MOG-EAE, mouse spinal cord | 4 (day 8, onset, peak, late) | [Zenodo 10.5281/zenodo.8037425](https://doi.org/10.5281/zenodo.8037425) |
+| Gadani et al., eLife 2024 | 10x Visium | PLP-EAE, mouse brain | 3 (weeks 6, 8, 10) | [GSE272362](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE272362), [GSE236963](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE236963) |
+
+### Single-cell RNA-seq with EAE timepoints
+
+| Dataset | Technology | Model / Tissue | Timepoints | Accession |
+|---------|-----------|----------------|------------|-----------|
+| Jordao et al., Science 2019 | scRNA-seq | MOG-EAE, mouse CNS, ~3.5k myeloid cells | 4 (naive, pre-clinical, onset, peak) | [GSE118948](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE118948) |
+| Falcao et al., Nat Med 2018 | scRNA-seq | EAE, mouse spinal cord, ~2.2k OL lineage | 3 (naive, early, chronic) | [GSE113973](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE113973) |
+| Floriddia et al., Nat Commun 2020 | scRNA-seq + ISS | SCI + EAE, mouse spinal cord + brain | Multiple | [GSE128525](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE128525) |
+
+### Demyelination / remyelination (cuprizone)
+
+| Dataset | Technology | Model / Tissue | Timepoints | Accession |
+|---------|-----------|----------------|------------|-----------|
+| Biogen, 2024 | snRNA-seq + spatial | Cuprizone, mouse brain | 3 (control, 4wk cuprizone, recovery) | [GSE255370](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE255370) |
+
+### Human MS (translational validation)
+
+| Dataset | Technology | Tissue | Lesion types | Accession |
+|---------|-----------|--------|-------------|-----------|
+| Absinta et al., Nature 2021 | snRNA-seq, 66k nuclei | Human brain WM | Chronic active, inactive, periplaque, normal | [GSE180759](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE180759) |
+| Lerma-Martin et al., Nat Neurosci 2024 | snRNA-seq + Visium, 34 samples | Human subcortical WM | Chronic active, inactive | [GSE279183](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE279183) |
+| Feng et al., Immunity 2025 | MERFISH (500 genes), ~400k cells | Human brain | Chronic active MS lesions | [GSE284005](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE284005) |
+
+### Priority for pretraining
+
+1. **Kukanja et al.** -- same tissue (spinal cord), same model (MOG-EAE), spatial, 4 timepoints. Castelo-Branco lab.
+2. **Gadani et al.** -- PLP-EAE (same disease model as ours), Visium, 3 timepoints. Tests generalization to brain.
+3. **GSE255370 (cuprizone)** -- clean demyelination/remyelination without immune complexity. Spatial + snRNA-seq.
+
 ## References
 
 - [Novae](https://github.com/MICS-Lab/novae) -- Graph-based spatial transcriptomics foundation model (Nature Methods, 2025)
